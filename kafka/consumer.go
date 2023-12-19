@@ -547,6 +547,10 @@ func (c *Consumer) Close() (err error) {
 		close(c.events)
 	}
 
+	// Destroy our queue
+	C.rd_kafka_queue_destroy(c.handle.rkq)
+	c.handle.rkq = nil
+
 	C.rd_kafka_consumer_close_queue(c.handle.rk, c.handle.rkq)
 
 	for C.rd_kafka_consumer_closed(c.handle.rk) != 1 {
@@ -555,10 +559,6 @@ func (c *Consumer) Close() (err error) {
 
 	// After this point, no more consumer methods may be called.
 	atomic.StoreUint32(&c.isClosed, 1)
-
-	// Destroy our queue
-	C.rd_kafka_queue_destroy(c.handle.rkq)
-	c.handle.rkq = nil
 
 	c.handle.cleanup()
 
