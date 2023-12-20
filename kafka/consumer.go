@@ -551,18 +551,22 @@ func (c *Consumer) Close() (err error) {
 	fmt.Println("destroying c.handle.rkq")
 	C.rd_kafka_queue_destroy(c.handle.rkq)
 	c.handle.rkq = nil
+	
+	fmt.Println("calling rd_kafka_consumer_close")
+	C.rd_kafka_consumer_close(c.handle.rk)
+	// fmt.Println("calling rd_kafka_consumer_close_queue")
+	// C.rd_kafka_consumer_close_queue(c.handle.rk, c.handle.rkq)
+
+	// for C.rd_kafka_consumer_closed(c.handle.rk) != 1 {
+	// 	fmt.Println("rd_kafka_consumer_closed not closed")
+	// 	c.Poll(100)
+	// }
+	
+	fmt.Println("c.handle.rk is closed")
+
 	fmt.Println("calling handle.cleanup()")
 	c.handle.cleanup()
-	
-	fmt.Println("calling rd_kafka_consumer_close_queue")
-	C.rd_kafka_consumer_close_queue(c.handle.rk, c.handle.rkq)
 
-	for C.rd_kafka_consumer_closed(c.handle.rk) != 1 {
-		fmt.Println("rd_kafka_consumer_closed not closed")
-		c.Poll(100)
-	}
-
-	fmt.Println("c.handle.rk is closed")
 	// After this point, no more consumer methods may be called.
 	atomic.StoreUint32(&c.isClosed, 1)
 
